@@ -404,7 +404,12 @@ namespace DotNetNuke.Web.InternalServices
                     extensionList = filter.Split(',').Select(i => i.Trim()).ToList();
                 }
 
-                var validateParams = new List<object>{ extensionList, portalId, userInfo.UserID};
+                var validateParams = new List<object>{ extensionList, userInfo.UserID};
+                if (!userInfo.IsSuperUser)
+                {
+                    validateParams.Add(portalId);
+                }
+
                 if (!ValidationUtils.ValidationCodeMatched(validateParams, validationCode))
                 {
                     throw new InvalidOperationException("Bad Request");
@@ -579,7 +584,7 @@ namespace DotNetNuke.Web.InternalServices
                     foreach (var item in provider.Contents)
                     {
                         var name = item.Headers.ContentDisposition.Name;
-                        switch (name.ToUpper())
+                        switch (name.ToUpperInvariant())
                         {
                             case "\"FOLDER\"":
                                 folder = item.ReadAsStringAsync().Result ?? "";

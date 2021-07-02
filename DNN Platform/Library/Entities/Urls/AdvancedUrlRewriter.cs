@@ -2749,6 +2749,7 @@ namespace DotNetNuke.Entities.Urls
 
                                 if (!(bestFriendlyNoScheme == requestedPathNoScheme
                                       || bestFriendlyNoScheme == rawUrlWithHost
+                                      || HttpUtility.UrlDecode(bestFriendlyNoScheme) == rawUrlWithHost
                                       || bestFriendlyNoScheme == rawUrlWithHostNoScheme
                                       || bestFriendlyNoScheme == HttpUtility.UrlDecode(requestedPathNoScheme)
                                       || HttpUtility.UrlDecode(bestFriendlyNoScheme) == HttpUtility.UrlDecode(requestedPathNoScheme)

@@ -972,8 +972,8 @@ namespace DotNetNuke.Entities.Tabs
             SkinSrc = Null.SetNullString(dr["SkinSrc"]);
             ContainerSrc = Null.SetNullString(dr["ContainerSrc"]);
             TabPath = Null.SetNullString(dr["TabPath"]);
-            StartDate = Null.SetNullDateTime(dr["StartDate"]);
-            EndDate = Null.SetNullDateTime(dr["EndDate"]);
+            StartDate = Null.SetNullDateTime(dr["StartDate"], DateTimeKind.Utc);
+            EndDate = Null.SetNullDateTime(dr["EndDate"], DateTimeKind.Utc);
             HasChildren = Null.SetNullBoolean(dr["HasChildren"]);
             RefreshInterval = Null.SetNullInteger(dr["RefreshInterval"]);
             PageHeadText = Null.SetNullString(dr["PageHeadText"]);

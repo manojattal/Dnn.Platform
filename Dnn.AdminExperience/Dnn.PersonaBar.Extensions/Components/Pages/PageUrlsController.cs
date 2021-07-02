@@ -86,16 +86,29 @@ namespace Dnn.PersonaBar.Pages.Components
 
             var seqNum = (tab.TabUrls.Count > 0) ? tab.TabUrls.Max(t => t.SeqNum) + 1 : 1;
             var portalLocales = LocaleController.Instance.GetLocales(portalSettings.PortalId);
-            var cultureCode = portalLocales.Where(l => l.Value.KeyID == dto.LocaleKey)
-                                .Select(l => l.Value.Code)
-                                .SingleOrDefault() ?? portalSettings.CultureCode;
+
+            // Get the culture code of selected portal alias
+            var alias = PortalAliasController.Instance
+                .GetPortalAliasesByPortalId(portalSettings.PortalId)
+                .SingleOrDefault(a => a.PortalAliasID == dto.SiteAliasKey);
+            Func<KeyValuePair<string, Locale>, bool> localeFilter = null;
+            if (alias != null &&
+                !string.IsNullOrWhiteSpace(alias.CultureCode))
+            {
+                localeFilter = l => l.Key == alias.CultureCode;
+            }
+            else
+            {
+                localeFilter = l => l.Value.KeyID == dto.LocaleKey;
+            }
+
+            var cultureCode = portalLocales.Where(localeFilter)
+                .Select(l => l.Value.Code)
+                .SingleOrDefault() ?? portalSettings.CultureCode;
 
             var portalAliasUsage = (PortalAliasUsageType)dto.SiteAliasUsage;
             if (portalAliasUsage == PortalAliasUsageType.Default)
             {
-                var alias = PortalAliasController.Instance.GetPortalAliasesByPortalId(portalSettings.PortalId)
-                                                        .SingleOrDefault(a => a.PortalAliasID == dto.SiteAliasKey);
-
                 if (string.IsNullOrEmpty(cultureCode) || alias == null)
                 {
                     return new PageUrlResult
@@ -385,8 +398,13 @@ namespace Dnn.PersonaBar.Pages.Components
                     var alias = aliases.FirstOrDefault(p => p.CultureCode == url.CultureCode);
                     if (alias == null)
                     {
-                        //if no primary alias just get first in list, need to use something
-                        alias = aliases.FirstOrDefault(a => a.PortalID == portalId);
+                        // check primary when no culture code is defined
+                        alias = aliases.FirstOrDefault(primary => primary.IsPrimary == true);
+                        if (alias == null)
+                        {
+                            //if no primary alias just get first in list, need to use something
+                            alias = aliases.FirstOrDefault(a => a.PortalID == portalId);
+                        }
                     }
                     if (alias != null)
                     {
@@ -401,7 +419,7 @@ namespace Dnn.PersonaBar.Pages.Components
                         .SingleOrDefault(p => p.PortalAliasID == url.PortalAliasId);
                     if (alias != null)
                     {
-                        AddUrlToList(tabs, portalId, url.SeqNum, alias, urlLocale, url.Url, url.QueryString, statusCode, isSystem, friendlyUrlSettings, url.LastModifiedByUserId);
+                        this.AddUrlToList(tabs, portalId, url.SeqNum, alias, urlLocale, url.Url, url.QueryString, statusCode, isSystem, friendlyUrlSettings, url.LastModifiedByUserId, url.PortalAliasUsage);
                     }
                 }
             }
@@ -429,7 +447,7 @@ namespace Dnn.PersonaBar.Pages.Components
             }
         }
 
-        private void AddUrlToList(List<Url> tabs, int portalId, int id, PortalAliasInfo alias, Locale urlLocale, string path, string queryString, int statusCode, bool isSystem, FriendlyUrlSettings friendlyUrlSettings, int? lastModifiedByUserId)
+        private void AddUrlToList(List<Url> tabs, int portalId, int id, PortalAliasInfo alias, Locale urlLocale, string path, string queryString, int statusCode, bool isSystem, FriendlyUrlSettings friendlyUrlSettings, int? lastModifiedByUserId, PortalAliasUsageType? portalAliasUsage = null)
         {
             var userName = "";
             if (lastModifiedByUserId.HasValue)
@@ -447,7 +465,7 @@ namespace Dnn.PersonaBar.Pages.Components
                 Locale = (urlLocale != null) ? new KeyValuePair<int, string>(urlLocale.KeyID, urlLocale.EnglishName)
                                              : new KeyValuePair<int, string>(-1, ""),
                 StatusCode = StatusCodes.SingleOrDefault(kv => kv.Key == statusCode),
-                SiteAliasUsage = (int)PortalAliasUsageType.ChildPagesInherit,
+                SiteAliasUsage = portalAliasUsage != null ? (int)portalAliasUsage : (int)PortalAliasUsageType.ChildPagesInherit,
                 IsSystem = isSystem,
                 UserName = userName
             });

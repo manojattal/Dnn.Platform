@@ -10,6 +10,7 @@ using System.IO.Compression;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Text;
+using DotNetNuke.Common.Utilities.Internal;
 
 namespace Dnn.ExportImport.Components.Common
 {
@@ -167,6 +168,27 @@ namespace Dnn.ExportImport.Components.Common
         /// <param name="archiveFileName"></param>
         /// <returns></returns>
         public static ZipArchive OpenCreate(string archiveFileName)
+        {
+            if (string.IsNullOrWhiteSpace(archiveFileName))
+            {
+                throw new ArgumentNullException(nameof(archiveFileName));
+            }
+
+            ZipArchive zip = null;
+
+            RetryableAction.RetryEverySecondFor30Seconds(
+                () => zip = OpenCreateUnsafe(archiveFileName),
+                $"{nameof(OpenCreateUnsafe)}(\"{archiveFileName}\")");
+
+            return zip;
+        }
+
+        /// <summary>
+        /// Open the archive file for read and write (no retry).
+        /// </summary>
+        /// <param name="archiveFileName">The full zip file path.</param>
+        /// <returns>A <see cref="ZipArchive"/> instance.</returns>
+        internal static ZipArchive OpenCreateUnsafe(string archiveFileName)
         {
             return File.Exists(archiveFileName)
                 ? ZipFile.Open(archiveFileName, ZipArchiveMode.Update, Encoding.UTF8)

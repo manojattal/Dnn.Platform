@@ -2,6 +2,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
+
 #region Usings
 
 using DotNetNuke.Common;
@@ -10,6 +11,7 @@ using DotNetNuke.Entities.Host;
 using DotNetNuke.Entities.Modules;
 using DotNetNuke.Entities.Portals;
 using DotNetNuke.Entities.Profile;
+using DotNetNuke.Entities.Tabs;
 using DotNetNuke.Entities.Users;
 using DotNetNuke.Framework;
 using DotNetNuke.Instrumentation;
@@ -164,7 +166,7 @@ namespace DotNetNuke.Modules.Admin.Authentication
             {
                 var redirectURL = "";
 
-                var setting = GetSetting(PortalId, "Redirect_AfterLogin");
+                var setting = GetSetting(this.PortalId, "Redirect_AfterLogin");
 
                 //first we need to check if there is a returnurl
                 if (Request.QueryString["returnurl"] != null)
@@ -201,12 +203,11 @@ namespace DotNetNuke.Modules.Admin.Authentication
                 if (string.IsNullOrEmpty(redirectURL) || isDefaultPage)
                 {
                     if (
-                        NeedRedirectAfterLogin
-                        && (isDefaultPage || IsRedirectingFromLoginUrl())
-                        && Convert.ToInt32(setting) != Null.NullInteger
-                        )
+                        this.NeedRedirectAfterLogin
+                        && (isDefaultPage || this.IsRedirectingFromLoginUrl())
+                        && Convert.ToInt32(setting) != Null.NullInteger)
                     {
-                        redirectURL = _navigationManager.NavigateURL(Convert.ToInt32(setting));
+                        redirectURL = this._navigationManager.NavigateURL(Convert.ToInt32(setting));
                     }
                     else
                     {
@@ -257,7 +258,7 @@ namespace DotNetNuke.Modules.Admin.Authentication
         private bool IsRedirectingFromLoginUrl()
         {
             return Request.UrlReferrer != null &&
-                Request.UrlReferrer.LocalPath.ToLowerInvariant().EndsWith(LOGIN_PATH);
+                this.Request.UrlReferrer.LocalPath.EndsWith(GetLoginPath(), StringComparison.InvariantCultureIgnoreCase);
         }
 
         private bool NeedRedirectAfterLogin =>
@@ -281,6 +282,16 @@ namespace DotNetNuke.Modules.Admin.Authentication
             return returnValue;
         }
 
+        private string GetLoginPath()
+        {
+            if (this.PortalSettings.LoginTabId == Null.NullInteger)
+            {
+                return LOGIN_PATH;
+            }
+
+            var tab = TabController.Instance.GetTab(this.PortalSettings.LoginTabId, this.PortalId);
+            return tab != null ? new Uri(this._navigationManager.NavigateURL(this.PortalSettings.LoginTabId), UriKind.RelativeOrAbsolute).LocalPath : LOGIN_PATH;
+        }
 
         /// <summary>
         /// Gets and sets a flag that determines whether a permanent auth cookie should be created

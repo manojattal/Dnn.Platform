@@ -1197,8 +1197,9 @@ namespace Dnn.PersonaBar.Pages.Components
             {
                 foreach (var rolePermission in permissions.RolePermissions.Where(NoLocked()))
                 {
-                    if (rolePermission.RoleId.ToString() == Globals.glbRoleAllUsers ||
-                        RoleController.Instance.GetRoleById(portalSettings.PortalId, rolePermission.RoleId) != null)
+                    if (rolePermission.RoleId.ToString() == Globals.glbRoleAllUsers
+                        || rolePermission.RoleId.ToString() == Globals.glbRoleUnauthUser
+                        || RoleController.Instance.GetRoleById(portalSettings.PortalId, rolePermission.RoleId) != null)
                     {
                         foreach (var permission in rolePermission.Permissions)
                         {
@@ -1363,7 +1364,6 @@ namespace Dnn.PersonaBar.Pages.Components
             tab.IconFileLarge = sourceTab.IconFileLarge;
             tab.PageHeadText = sourceTab.PageHeadText;
             tab.RefreshInterval = sourceTab.RefreshInterval;
-            tab.IsSecure = sourceTab.IsSecure;
             _tabController.UpdateTab(tab);
 
             //update need tab settings.

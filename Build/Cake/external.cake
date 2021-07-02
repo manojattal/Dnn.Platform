@@ -24,6 +24,9 @@ Task("CKEP")
 		Information("Decompressing: {0}", "CK Editor");
 		Unzip(buildDirFullPath + "ckeditor.zip", buildDirFullPath + "Providers/");
 
+		Information("Patching CKEditor code (DNN-26942, PR #4248, DNN Platform 9.8.1 back-port to 9.6.1, Evoq 9.6.10)");
+		StartPowershellScript("./patch-DNN-26942.ps1 "+buildDirFullPath+"Providers/CKEditorProvider-"+targetBranchCk);
+
 		//look for solutions and start building them
 		var externalSolutions = GetFiles(ckepFolder + "**/*.sln");
 		Information("Found {0} solutions.", externalSolutions.Count);

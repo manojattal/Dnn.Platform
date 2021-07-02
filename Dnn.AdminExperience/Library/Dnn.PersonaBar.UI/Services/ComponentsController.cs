@@ -2,6 +2,8 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
+using System.Globalization;
+using DotNetNuke.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -30,6 +32,7 @@ namespace Dnn.PersonaBar.UI.Services
     {
         private static readonly ILog Logger = LoggerSource.Instance.GetLogger(typeof (ComponentsController));
         public string LocalResourcesFile => Path.Combine("~/DesktopModules/admin/Dnn.PersonaBar/App_LocalResources/SharedResources.resx");
+        private int UnauthUserRoleId => int.Parse(Globals.glbRoleUnauthUser, CultureInfo.InvariantCulture); 
 
         #region API in Admin Level
 
@@ -112,14 +115,22 @@ namespace Dnn.PersonaBar.UI.Services
                 var matchedRoles = RoleController.Instance.GetRoles(PortalId)
                     .Where(r => (roleGroupId == -2 || r.RoleGroupID == roleGroupId)
                                 && r.RoleName.IndexOf(keyword, StringComparison.InvariantCultureIgnoreCase) > -1
-                                   && r.Status == RoleStatus.Approved)
+                                && r.Status == RoleStatus.Approved).ToList();
+
+                    if (roleGroupId <= Null.NullInteger 
+                            && Globals.glbRoleUnauthUserName.IndexOf(keyword, StringComparison.InvariantCultureIgnoreCase) > -1) 
+                    { 
+                        matchedRoles.Add(new RoleInfo { RoleID = this.UnauthUserRoleId, RoleName = Globals.glbRoleUnauthUserName }); 
+                    } 
+                    
+                    var data = matchedRoles.OrderBy(r => r.RoleName)
                     .Select(r => new SuggestionDto()
                     {
                         Value = r.RoleID,
                         Label = r.RoleName
                     });
 
-                return Request.CreateResponse(HttpStatusCode.OK, matchedRoles);
+                return this.Request.CreateResponse(HttpStatusCode.OK, data);
             }
             catch (Exception ex)
             {

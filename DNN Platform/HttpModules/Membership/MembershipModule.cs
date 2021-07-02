@@ -42,7 +42,6 @@ namespace DotNetNuke.HttpModules.Membership
 
         private static readonly Regex NameRegex = new Regex(@"\w+[\\]+(?=)", RegexOptions.Compiled);
 
-        private static string _cultureCode;
         /// <summary>
         /// Gets the name of the module.
         /// </summary>
@@ -61,12 +60,7 @@ namespace DotNetNuke.HttpModules.Membership
         {
             get
             {
-                if (string.IsNullOrEmpty(_cultureCode))
-                {
-                    _cultureCode = Localization.GetPageLocale(PortalSettings.Current).Name; 
-                }
-
-                return _cultureCode;
+                return Localization.GetPageLocale(PortalSettings.Current).Name;
             }
         }
 

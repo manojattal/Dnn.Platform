@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml;
 using Dnn.PersonaBar.Pages.Components.Exceptions;
@@ -76,13 +77,28 @@ namespace Dnn.PersonaBar.Pages.Components
                 try
                 {
                     string errorMessage = null;
-                    if (oTab.Level == 0)
+                    if (currentIndex == 0 && oTab.Level > 0)
+                    {
+                        errorMessage = Localization.GetString("NoParentTabName");
+                    }
+                    else if (DuplicateExists(currentIndex, pages))
+                    {
+                        errorMessage = Localization.GetString("TabExists");
+                    }
+                    else if (oTab.Level == 0)
                     {
                         oTab.TabID = CreateTabFromParent(portalSettings, rootTab, oTab, parentId, validateOnly, out errorMessage);
                     }
                     else if (validateOnly)
                     {
-                        errorMessage = string.Empty;
+                        if (string.IsNullOrWhiteSpace(oTab.TabName))
+                        {
+                            errorMessage = string.Format(Localization.GetString("EmptyTabName"), oTab.TabName);
+                        }
+                        else
+                        {
+                            errorMessage = string.Empty;
+                        }
                     }
                     else
                     {
@@ -102,6 +118,60 @@ namespace Dnn.PersonaBar.Pages.Components
             response.Pages = bulkPageItems;
 
             return response;
+        }
+
+        /// <summary>
+        /// Checks whether there is a duplicate tab exists.
+        /// </summary>
+        /// <param name="pageIndex">Page index to check the duplicate for.</param>
+        /// <param name="pages">Page list to check the duplicates from.</param>
+        /// <returns>True in case there is a tab with the same name and path and with the index of greater than the first occurence; false otherwise.</returns>
+        private static bool DuplicateExists(int pageIndex, string[] pages)
+        {
+            var pageName = pages[pageIndex];
+            var pageDirectory = GetPageDirectory(pageIndex, pages);
+
+            for (var index = 0; index < pageIndex; index++)
+            {
+                var loopedDirectory = GetPageDirectory(index, pages);
+                if (loopedDirectory != pageDirectory)
+                {
+                    continue;
+                }
+                else if (string.Equals(pageName, pages[index], StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static string GetPageDirectory(int pageIndex, string[] pages)
+        {
+            var fullPath = string.Empty;
+            var pageLevel = GetPageLevel(pages[pageIndex]);
+            var currentLevel = pageLevel;
+            for (var index = pageIndex; index > -1; index--)
+            {
+                var currentPage = pages[index];
+                var level = GetPageLevel(currentPage);
+                if (level < currentLevel)
+                {
+                    currentLevel = level;
+                    fullPath = $"{currentPage}>{fullPath}";
+                }
+            }
+
+            return fullPath;
+        }
+
+        private static int GetPageLevel(string pageName)
+        {
+            return pageName
+                .Replace(" ", string.Empty)
+                .TakeWhile(t => t == '>')
+                .Count();
         }
 
         private static BulkPageResponseItem ToBulkPageResponseItem(TabInfo tab, string error)

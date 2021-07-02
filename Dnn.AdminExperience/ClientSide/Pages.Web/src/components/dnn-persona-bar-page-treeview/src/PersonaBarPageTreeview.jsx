@@ -4,7 +4,6 @@ import utils from "utils";
 import "./styles.less";
 import { SingleLineInput } from "@dnnsoftware/dnn-react-common";
 import PersonaBarPageIcon from "./_PersonaBarPageIcon";
-import PersonaBarDraftPencilIcon from "./_PersonaBarDraftPencilIcon";
 
 export class PersonaBarPageTreeview extends Component {
 
@@ -63,11 +62,17 @@ export class PersonaBarPageTreeview extends Component {
             e.preventDefault();
             const elm = document.getElementById(`dropzone-${item.name}-${item.id}-${direction}`);
             (direction === "before") ? elm.classList.add("list-item-border-bottom") : elm.classList.add("list-item-border-top");
+            const containerElm = document.getElementById(`list-item-container-${item.name}-${item.id}`);
+            item.onDragOverState = false;
+            containerElm.className = this.getClassName(item);
         };
 
         const onDragLeave = (item, direction) => {
             const elm = document.getElementById(`dropzone-${item.name}-${item.id}-${direction}`);
             (direction === "before") ? elm.classList.remove("list-item-border-bottom") : elm.classList.remove("list-item-border-top");
+            const containerElm = document.getElementById(`list-item-container-${item.name}-${item.id}`);
+            item.onDragOverState = true;
+            containerElm.className = this.getClassName(item);
         };
         if (!utils.getIsSuperUser() && (parentItem === undefined || parentItem && !parentItem.canManagePage)) {
             return;
@@ -162,7 +167,7 @@ export class PersonaBarPageTreeview extends Component {
                         >
                         </div>
 
-                        <div style={style} className={this.getClassName(item)}>
+                        <div id={`list-item-container-${item.name}-${item.id}`} style={style} className={this.getClassName(item)}>
                             <PersonaBarPageIcon iconType={item.pageType} selected={item.selected || false} />
                             <span
                                 className={`item-name ${itemNameHidden}`}
@@ -178,9 +183,6 @@ export class PersonaBarPageTreeview extends Component {
                                     item.name
                                 }
                             </span>
-                            <div className="draft-pencil">
-                                <PersonaBarDraftPencilIcon display={item.hasUnpublishedChanges} />
-                            </div>
                         </div>
                         {((item.childListItems && !item.isOpen) || !item.childListItems) && index === total && this.renderDropZone("after", item)}
                     </div>

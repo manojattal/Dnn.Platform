@@ -29,7 +29,7 @@
 
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
-var targetBranchCk = Argument("CkBranch", "development");
+var targetBranchCk = Argument("CkBranch", "289007949cce53f56ec72a22756f2169ef40ddc6");
 
 //////////////////////////////////////////////////////////////////////
 // PREPARATION
